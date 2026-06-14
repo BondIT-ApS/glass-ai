@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* G2 display dimensions — generates w-g2-display, h-g2-display, max-w-g2-display utilities. */
+  --width-g2-display: 576px;
+  --height-g2-display: 288px;
+  --max-width-g2-display: 576px;
+}
 
 html, body, #root {
   height: 100%;

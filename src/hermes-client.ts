@@ -34,7 +34,6 @@ export class HermesClient {
       // Required because we're calling from a browser/WebView context. The proxy itself
       // is responsible for keeping credentials safe — see SECURITY.md.
       dangerouslyAllowBrowser: true,
-      timeout: TIMEOUT_MS,
       maxRetries: 0, // We do our own retry loop with explicit backoff.
     });
   }
@@ -50,7 +49,7 @@ export class HermesClient {
           language: 'en',
           response_format: 'json',
         },
-        { signal },
+        { signal: signal ?? AbortSignal.timeout(TIMEOUT_MS) },
       );
       return result.text.trim();
     });
@@ -68,11 +67,10 @@ export class HermesClient {
         {
           model: this.cfg.model,
           messages,
-          stream: false,
           max_tokens: 512,
           temperature: 0.6,
         },
-        { signal },
+        { signal: signal ?? AbortSignal.timeout(TIMEOUT_MS) },
       );
       const text = response.choices[0]?.message?.content?.trim();
       if (!text) throw new HermesEmptyResponseError();
