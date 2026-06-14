@@ -10,6 +10,7 @@ export default defineConfig({
       exclude: [
         'src/**/*.test.ts',
         'src/vite-env.d.ts',
+        'src/types.ts',     // pure type declarations — no runtime code
         'src/main.tsx',
         'src/ui/**',
         // Bridge and network layers require hardware/real APIs — not unit-testable here

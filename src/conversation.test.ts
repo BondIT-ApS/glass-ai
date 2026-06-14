@@ -131,6 +131,29 @@ describe('appendTurn', () => {
 });
 
 // ---------------------------------------------------------------------------
+// saveHistory payload-size cap (tested via appendTurn)
+// ---------------------------------------------------------------------------
+
+describe('saveHistory payload cap', () => {
+  it('trims the oldest exchange(s) when serialized history exceeds 16 KB', async () => {
+    const storage = makeStorage();
+    // 5 exchanges × ~2040 chars/turn ≈ 20 KB raw JSON — triggers the 16 KB cap
+    const bigContent = 'x'.repeat(2_000);
+    for (let i = 0; i < 5; i++) {
+      await appendTurn(turn('user', bigContent), storage);
+      await appendTurn(turn('assistant', bigContent), storage);
+    }
+    const raw = await storage.get('glassai.history.v1');
+    expect(raw).not.toBeNull();
+    // After trimming, the stored payload must be within the 16 KB cap
+    expect(raw!.length).toBeLessThanOrEqual(16 * 1024);
+    // History is still parseable and non-empty
+    const remaining = await loadHistory(storage);
+    expect(remaining.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // clearHistory
 // ---------------------------------------------------------------------------
 

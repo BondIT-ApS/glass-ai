@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { PersistedConfig } from './types';
 import {
+  browserStorage,
   DEFAULTS,
   isConfigured,
   loadConfig,
@@ -25,6 +26,40 @@ function makeStorage(initial: Record<string, string> = {}): ConfigStorage {
 function stored(cfg: Partial<PersistedConfig>): Record<string, string> {
   return { 'glassai.config.v1': JSON.stringify(cfg) };
 }
+
+// ---------------------------------------------------------------------------
+// browserStorage
+// ---------------------------------------------------------------------------
+
+describe('browserStorage', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('get returns the value from globalThis.localStorage', async () => {
+    const getItem = vi.fn().mockReturnValue('stored-value');
+    vi.stubGlobal('localStorage', { getItem, setItem: vi.fn() });
+    expect(await browserStorage.get('my-key')).toBe('stored-value');
+    expect(getItem).toHaveBeenCalledWith('my-key');
+  });
+
+  it('get returns null when localStorage is unavailable', async () => {
+    vi.stubGlobal('localStorage', undefined);
+    expect(await browserStorage.get('my-key')).toBeNull();
+  });
+
+  it('set calls globalThis.localStorage.setItem', async () => {
+    const setItem = vi.fn();
+    vi.stubGlobal('localStorage', { getItem: vi.fn(), setItem });
+    await browserStorage.set('my-key', 'my-value');
+    expect(setItem).toHaveBeenCalledWith('my-key', 'my-value');
+  });
+
+  it('set is a no-op when localStorage is unavailable', async () => {
+    vi.stubGlobal('localStorage', undefined);
+    await expect(browserStorage.set('my-key', 'my-value')).resolves.not.toThrow();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // DEFAULTS
